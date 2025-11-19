@@ -1,0 +1,43 @@
+[project]
+name = "fastapi-otp-auth"
+version = "0.1.0"
+description = "A simple and robust OTP (One-Time Password) authentication library for FastAPI, backed by Redis and Email."
+authors = [
+    {name = "Rok Sprogar", email = "rok.sprogar@gmail.com"}
+]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13,<4.0.0"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: FastAPI",
+]
+dependencies = [
+    "fastapi (>=0.119.0,<0.121.0)",
+    "redis[hiredis] (>=7.0.1,<8.0.0)",
+    "fastapi-mail (>=1.5.7,<2.0.0)",
+    "pydantic-settings (>=2.0.0,<3.0.0)",
+    "pyjwt (>=2.8.0,<3.0.0)"
+]
+
+[project.urls]
+Repository = "https://github.com/roksprogar/fastapi-otp-auth"
+Homepage = "https://github.com/roksprogar/fastapi-otp-auth"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+httpx = "^0.27.0"
+ruff = "^0.3.0"
+
+
+[tool.poetry]
+packages = [{include = "fastapi_otp_auth", from = "src"}]
+include = ["LICENSE"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

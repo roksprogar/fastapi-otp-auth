@@ -1,0 +1,24 @@
+
+services:
+  app-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      # Mock email settings for tests
+      - SMTP_SERVER=mock
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=mock
+      - SMTP_PASSWORD=mock
+      - MAIL_FROM_NAME=Test
+      - OTP_KEY_PREFIX=test_otp_
+      - OTP_EXPIRY_SECONDS=300
+    depends_on:
+      - redis
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+
+  redis:
+    image: redis:7-alpine

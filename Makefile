@@ -1,0 +1,8 @@
+
+.PHONY: test clean
+
+test:
+	docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from app-test
+
+clean:
+	docker-compose -f docker-compose.test.yml down -v

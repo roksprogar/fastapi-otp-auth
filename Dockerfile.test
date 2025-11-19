@@ -1,0 +1,38 @@
+
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+
+# Configure poetry to not create a virtual environment
+RUN poetry config virtualenvs.create false
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock README.md ./
+
+# Regenerate lock file because local environment issues prevented it
+RUN poetry lock
+RUN cp poetry.lock poetry.lock.generated
+
+# Install dependencies (only)
+RUN poetry install --no-interaction --no-ansi --no-root
+
+# Copy source code
+COPY . .
+
+# Restore the generated lock file
+RUN mv poetry.lock.generated poetry.lock
+
+# Install the project itself
+RUN poetry install --no-interaction --no-ansi
+
+# Command to run tests
+CMD ["pytest"]
