@@ -6,6 +6,17 @@
 
 A simple and robust OTP (One-Time Password) authentication library for FastAPI, backed by Redis and Email.
 
+## Why OTP?
+
+Passwords are a pain. Users forget them, reuse them, and they are a prime target for attackers. Storing them securely is a liability.
+
+**FastAPI OTP Auth** solves this by eliminating passwords entirely:
+
+- 🧠 **No Memory Required**: Users don't need to remember complex passwords.
+- 💾 **Zero Password Storage**: You don't have to worry about hashing, salting, or leaking passwords.
+- 🔄 **Simplified Flows**: No more "Forgot Password" or "Reset Password" complexity.
+- 🛡️ **Enhanced Security**: OTPs are short-lived and one-time use, mitigating credential stuffing and replay attacks.
+
 ## Features
 
 - 🔐 **Secure OTP Generation**: Cryptographically secure 6-digit codes.
