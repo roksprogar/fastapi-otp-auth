@@ -23,10 +23,10 @@ A simple and robust OTP (One-Time Password) authentication library for FastAPI, 
 pip install fastapi-otp-auth
 ```
 
-Or using Poetry:
+Or using uv:
 
 ```bash
-poetry add fastapi-otp-auth
+uv add fastapi-otp-auth
 ```
 
 ## Configuration
@@ -165,7 +165,7 @@ This will spin up a Redis container and run the test suite in an isolated enviro
 To run linting checks (ruff) using Docker:
 
 ```bash
-docker-compose -f docker-compose.test.yml run --rm app-test ruff check .
+docker-compose -f docker-compose.test.yml run --rm app-test uv run ruff check .
 ```
 
 ### Pre-commit Hooks
@@ -173,11 +173,11 @@ docker-compose -f docker-compose.test.yml run --rm app-test ruff check .
 To automatically run checks before every commit, install the pre-commit hooks:
 
 ```bash
-poetry run pre-commit install
+uv run pre-commit install
 ```
 
 You can also run the hooks manually against all files:
 
 ```bash
-poetry run pre-commit run --all-files
+uv run pre-commit run --all-files
 ```

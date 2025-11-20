@@ -1,38 +1,23 @@
-
-FROM python:3.13-slim
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
-
-# Configure poetry to not create a virtual environment
-RUN poetry config virtualenvs.create false
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
 
 # Copy dependency files
-COPY pyproject.toml poetry.lock README.md ./
+COPY pyproject.toml README.md ./
 
-# Regenerate lock file because local environment issues prevented it
-RUN poetry lock
-RUN cp poetry.lock poetry.lock.generated
-
-# Install dependencies (only)
-RUN poetry install --no-interaction --no-ansi --no-root
+# Install dependencies
+# We don't have a lock file yet, so we just sync. 
+# In a real scenario with a lock file, we would use --frozen.
+RUN uv sync --no-install-project
 
 # Copy source code
 COPY . .
 
-# Restore the generated lock file
-RUN mv poetry.lock.generated poetry.lock
-
 # Install the project itself
-RUN poetry install --no-interaction --no-ansi
+RUN uv sync
 
 # Command to run tests
-CMD ["pytest"]
+CMD ["uv", "run", "pytest"]
