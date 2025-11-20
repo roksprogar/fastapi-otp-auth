@@ -159,3 +159,25 @@ make test
 ```
 
 This will spin up a Redis container and run the test suite in an isolated environment.
+
+### Running Checks
+
+To run linting checks (ruff) using Docker:
+
+```bash
+docker-compose -f docker-compose.test.yml run --rm app-test ruff check .
+```
+
+### Pre-commit Hooks
+
+To automatically run checks before every commit, install the pre-commit hooks:
+
+```bash
+poetry run pre-commit install
+```
+
+You can also run the hooks manually against all files:
+
+```bash
+poetry run pre-commit run --all-files
+```

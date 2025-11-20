@@ -8,9 +8,10 @@ from fastapi_otp_auth.blacklist import is_token_blacklisted
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/verify-otp")
 
+
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    redis_client: redis.Redis = Depends(get_redis_client)
+    redis_client: redis.Redis = Depends(get_redis_client),
 ) -> str:
     payload = verify_token(token, "access")
     if payload is None:
@@ -19,7 +20,7 @@ async def get_current_user(
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     email: str = payload.get("sub")
     if email is None:
         raise HTTPException(

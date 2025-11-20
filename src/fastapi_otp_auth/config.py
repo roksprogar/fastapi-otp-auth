@@ -1,15 +1,16 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
-    
+
     # Email settings
     smtp_server: str = "127.0.0.1"
     smtp_port: int = 1025
     smtp_username: str = "user@example.com"
     smtp_password: str = "password"
     mail_from_name: str = "FastAPI App"
-    
+
     # OTP settings
     otp_expiry_seconds: int = 300  # 5 minutes
     otp_key_prefix: str = "otp_"
@@ -22,5 +23,6 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7  # 7 days
 
     model_config = SettingsConfigDict(env_prefix="FASTAPI_OTP_AUTH_")
+
 
 settings = Settings()
