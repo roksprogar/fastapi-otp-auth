@@ -1,6 +1,6 @@
 # FastAPI OTP Auth
 
-[![PyPI version](https://badge.fury.io/py/fastapi-otp-auth.svg)](https://badge.fury.io/py/fastapi-otp-auth)
+[![PyPI](https://img.shields.io/pypi/v/fastapi-otp-auth.svg)](https://pypi.org/project/fastapi-otp-auth/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
