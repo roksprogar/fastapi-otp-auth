@@ -52,6 +52,10 @@ def mock_redis():
 
     # Default exists to 0 (not blacklisted)
     mock_redis_instance.exists.return_value = 0
+    # Default incr to 1
+    mock_redis_instance.incr.return_value = 1
+    # Default get to None
+    mock_redis_instance.get.return_value = None
 
     yield mock_redis_instance
 
@@ -111,8 +115,14 @@ def test_request_otp_invalid_email():
 
 def test_verify_otp_success(mock_redis, test_email, test_otp):
     """Test successful OTP verification"""
-    # Mock the Redis get to return our test OTP
-    mock_redis.get.return_value = test_otp
+
+    # Mock the Redis get to return our test OTP for otp key, and None for attempts
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        return None
+
+    mock_redis.get.side_effect = side_effect
 
     response = client.post("/verify-otp", json={"email": test_email, "otp": test_otp})
 
@@ -126,7 +136,7 @@ def test_verify_otp_success(mock_redis, test_email, test_otp):
     assert "refresh_token" in response.cookies
 
     # Verify that the OTP was deleted from Redis
-    mock_redis.delete.assert_called_once_with(f"otp_{test_email}")
+    mock_redis.delete.assert_any_call(f"otp_{test_email}")
 
 
 def test_verify_otp_expired(mock_redis, test_email):
@@ -142,8 +152,14 @@ def test_verify_otp_expired(mock_redis, test_email):
 
 def test_verify_otp_invalid(mock_redis, test_email, test_otp):
     """Test OTP verification with invalid OTP"""
+
     # Mock the Redis get to return a different OTP
-    mock_redis.get.return_value = "654321"
+    def side_effect(key):
+        if "otp_" in key:
+            return "654321"
+        return None
+
+    mock_redis.get.side_effect = side_effect
 
     response = client.post("/verify-otp", json={"email": test_email, "otp": test_otp})
 
@@ -162,8 +178,15 @@ def test_verify_otp_invalid_email():
 
 def test_refresh_token_success(mock_redis, test_email, test_otp):
     """Test successful token refresh"""
+
     # First get a valid refresh token by verifying OTP
-    mock_redis.get.return_value = test_otp
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        return None
+
+    mock_redis.get.side_effect = side_effect
+
     verify_response = client.post(
         "/verify-otp", json={"email": test_email, "otp": test_otp}
     )
@@ -193,8 +216,15 @@ def test_refresh_token_invalid():
 
 def test_protected_route_success(mock_redis, test_email, test_otp):
     """Test accessing a protected route with valid access token"""
+
     # Get access token
-    mock_redis.get.return_value = test_otp
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        return None
+
+    mock_redis.get.side_effect = side_effect
+
     verify_response = client.post(
         "/verify-otp", json={"email": test_email, "otp": test_otp}
     )
@@ -217,8 +247,15 @@ def test_protected_route_unauthorized():
 
 def test_logout_success(mock_redis, test_email, test_otp):
     """Test successful logout"""
+
     # Get tokens
-    mock_redis.get.return_value = test_otp
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        return None
+
+    mock_redis.get.side_effect = side_effect
+
     verify_response = client.post(
         "/verify-otp", json={"email": test_email, "otp": test_otp}
     )
@@ -244,8 +281,15 @@ def test_logout_success(mock_redis, test_email, test_otp):
 
 def test_access_revoked_token(mock_redis, test_email, test_otp):
     """Test accessing protected route with revoked token"""
+
     # Get tokens
-    mock_redis.get.return_value = test_otp
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        return None
+
+    mock_redis.get.side_effect = side_effect
+
     verify_response = client.post(
         "/verify-otp", json={"email": test_email, "otp": test_otp}
     )
@@ -266,8 +310,15 @@ def test_access_revoked_token(mock_redis, test_email, test_otp):
 
 def test_refresh_revoked_token(mock_redis, test_email, test_otp):
     """Test refreshing with revoked refresh token"""
+
     # Get tokens
-    mock_redis.get.return_value = test_otp
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        return None
+
+    mock_redis.get.side_effect = side_effect
+
     verify_response = client.post(
         "/verify-otp", json={"email": test_email, "otp": test_otp}
     )
@@ -281,3 +332,56 @@ def test_refresh_revoked_token(mock_redis, test_email, test_otp):
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Refresh token has been revoked"
+
+
+def test_request_otp_rate_limit(mock_redis, test_email):
+    """Test OTP request rate limiting"""
+    # Mock redis.incr to return a value greater than the limit (5)
+    mock_redis.incr.return_value = 6
+
+    response = client.post("/request-otp", json={"email": test_email})
+
+    assert response.status_code == 429
+    assert "Too many OTP requests" in response.json()["detail"]
+
+
+def test_verify_otp_max_attempts(mock_redis, test_email, test_otp):
+    """Test OTP verification max attempts"""
+    # Mock redis.get to return the OTP first, then the attempts count
+    # We need to handle multiple calls to get:
+    # 1. get(otp_key) -> returns OTP
+    # 2. get(attempts_key) -> returns attempts count >= 5
+
+    def side_effect(key):
+        if "otp_" in key:
+            return test_otp
+        if "attempts:" in key:
+            return "5"
+        return None
+
+    mock_redis.get.side_effect = side_effect
+
+    response = client.post("/verify-otp", json={"email": test_email, "otp": test_otp})
+
+    assert response.status_code == 400
+    assert "Too many failed attempts" in response.json()["detail"]
+
+    # Verify OTP was deleted
+    mock_redis.delete.assert_any_call(f"otp_{test_email}")
+
+
+def test_verify_otp_cookie_secure(mock_redis, test_email, test_otp):
+    """Test that the cookie secure flag is set correctly"""
+    mock_redis.get.return_value = test_otp
+    # Ensure attempts are low
+    mock_redis.get.side_effect = lambda k: test_otp if "otp_" in k else None
+
+    response = client.post("/verify-otp", json={"email": test_email, "otp": test_otp})
+
+    assert response.status_code == 200
+
+    # Check cookie attributes
+    # TestClient handles cookies a bit differently, but we can check the Set-Cookie header
+    set_cookie = response.headers["set-cookie"]
+    assert "Secure" in set_cookie
+    assert "HttpOnly" in set_cookie

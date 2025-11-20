@@ -46,6 +46,18 @@ async def request_otp(
 ):
     email = payload.email
 
+    # Rate Limiting
+    rate_limit_key = f"rate_limit:{email}"
+    current_requests = await redis.incr(rate_limit_key)
+    if current_requests == 1:
+        await redis.expire(rate_limit_key, 60)  # Reset every minute
+
+    if current_requests > settings.otp_rate_limit_per_minute:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many OTP requests. Please try again later.",
+        )
+
     # Generate 6-digit cryptographically secure OTP
     otp = "".join([str(secrets.choice("0123456789")) for _ in range(6)])
 
@@ -85,6 +97,17 @@ async def verify_otp(
     redis_key = f"{settings.otp_key_prefix}{email}"
     stored_otp = await redis.get(redis_key)
 
+    # Check for max attempts
+    attempts_key = f"attempts:{email}"
+    current_attempts = await redis.get(attempts_key)
+    if current_attempts and int(current_attempts) >= settings.otp_max_verify_attempts:
+        await redis.delete(redis_key)
+        await redis.delete(attempts_key)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many failed attempts. OTP has been invalidated.",
+        )
+
     if stored_otp is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -94,6 +117,7 @@ async def verify_otp(
     if stored_otp == otp:
         # Delete the OTP from Redis immediately after successful verification
         await redis.delete(redis_key)
+        await redis.delete(attempts_key)
 
         # Generate tokens
         access_token = create_access_token(data={"sub": email})
@@ -104,7 +128,7 @@ async def verify_otp(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=True,  # Should be True in production
+            secure=settings.cookie_secure,
             samesite="lax",
             max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
         )
@@ -116,6 +140,8 @@ async def verify_otp(
         }
 
     # Invalid OTP
+    await redis.incr(attempts_key)
+    await redis.expire(attempts_key, settings.otp_expiry_seconds)
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP provided."
     )

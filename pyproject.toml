@@ -1,20 +1,18 @@
 [project]
 name = "fastapi-otp-auth"
-version = "0.1.1"
+version = "0.1.2"
 description = "A simple and robust OTP (One-Time Password) authentication library for FastAPI, backed by Redis and Email."
 authors = [
     {name = "Rok Sprogar", email = "rok.sprogar@gmail.com"}
 ]
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.13,<4.0.0"
+requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.13",
-    "Framework :: FastAPI",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
 ]
 dependencies = [
     "fastapi>=0.119.0,<0.121.0",

@@ -14,7 +14,12 @@ class Settings(BaseSettings):
     # OTP settings
     otp_expiry_seconds: int = 300  # 5 minutes
     otp_key_prefix: str = "otp_"
+    otp_rate_limit_per_minute: int = 5
+    otp_max_verify_attempts: int = 5
     blacklist_key_prefix: str = "blacklist_"
+
+    # Cookie settings
+    cookie_secure: bool = True
 
     # JWT settings
     jwt_secret: str = "change-me-in-production"
