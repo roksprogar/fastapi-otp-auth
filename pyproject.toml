@@ -1,6 +1,6 @@
 [project]
 name = "fastapi-otp-auth"
-version = "0.1.3"
+version = "0.1.4"
 description = "A simple and robust OTP (One-Time Password) authentication library for FastAPI, backed by Redis and Email."
 authors = [
     {name = "Rok Sprogar", email = "rok.sprogar@gmail.com"}
