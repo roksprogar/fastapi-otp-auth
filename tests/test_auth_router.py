@@ -32,13 +32,8 @@ client = TestClient(app)
 @pytest.fixture
 def mock_redis():
     """Mock Redis client for testing"""
-    with patch("fastapi_otp_auth.auth_router.get_redis_client"):
-        # Create a mock Redis instance
-        mock_redis_instance = AsyncMock()
-        # We need to override the dependency, not patch the module level redis_client which doesn't exist anymore in the same way
-        # But wait, the router uses Depends(get_redis_client).
-        # So we should override the dependency in the app.
-        pass
+    # Create a mock Redis instance
+    mock_redis_instance = AsyncMock()
 
     # Better way to mock redis for the app
     mock_redis_instance = AsyncMock()
