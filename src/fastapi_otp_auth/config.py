@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     otp_rate_limit_per_minute: int = 5
     otp_max_verify_attempts: int = 5
     blacklist_key_prefix: str = "blacklist_"
-    
+
     # Local Auth Bypass
     disable_local_auth: bool = False
 
