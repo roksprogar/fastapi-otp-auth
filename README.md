@@ -59,6 +59,18 @@ The library is configured using environment variables. The prefix for all variab
 | `FASTAPI_OTP_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime | `60` (1 hour) |
 | `FASTAPI_OTP_AUTH_REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime | `7` (7 days) |
 | `FASTAPI_OTP_AUTH_BLACKLIST_KEY_PREFIX` | Prefix for blacklisted tokens in Redis | `blacklist_` |
+| `FASTAPI_OTP_AUTH_DISABLE_LOCAL_AUTH` | Enable "Magic OTP" flow (skips email, accepts `000000`) | `False` |
+
+## Local Development (Magic OTP)
+
+To simplify local development and testing, you can enable the "Magic OTP" flow. This allows you to log in as **any user** using the fixed OTP code `000000`, without sending actual emails with the OTP.
+
+1.  Set `FASTAPI_OTP_AUTH_DISABLE_LOCAL_AUTH=true` in your **local** `.env` file or environment.
+2.  Request an OTP for any email (e.g., `test@example.com`).
+3.  Verify using the code `000000`.
+
+> [!WARNING]
+> **Security Risk**: Ensure this environment variable is **NEVER** set to `true` in production environments.
 
 ## Usage
 

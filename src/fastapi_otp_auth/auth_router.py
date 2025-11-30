@@ -58,14 +58,22 @@ async def request_otp(
             detail="Too many OTP requests. Please try again later.",
         )
 
-    # Generate 6-digit cryptographically secure OTP
-    otp = "".join([str(secrets.choice("0123456789")) for _ in range(6)])
+    # Check if local auth is disabled (Magic OTP)
+    if settings.disable_local_auth:
+        otp = "000000"
+    else:
+        # Generate 6-digit cryptographically secure OTP
+        otp = "".join([str(secrets.choice("0123456789")) for _ in range(6)])
 
     # Store OTP in Redis with expiry from settings
     redis_key = f"{settings.otp_key_prefix}{email}"
     await redis.setex(name=redis_key, time=settings.otp_expiry_seconds, value=otp)
 
     logger.info(f"OTP generated for {email}")
+
+    if settings.disable_local_auth:
+        # Skip sending email
+        return {"message": "OTP sent successfully"}
 
     # Send OTP via email
     result = await email_service.send_email(
