@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI, Depends
 from fastapi_otp_auth.auth_router import router
