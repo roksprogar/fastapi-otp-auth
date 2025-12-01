@@ -18,6 +18,7 @@ from fastapi_otp_auth.utils import (
     verify_token,
 )
 from fastapi_otp_auth.blacklist import blacklist_token, is_token_blacklisted
+from fastapi_otp_auth.rate_limiter import OtpRateLimiter, get_otp_rate_limiter
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/verify-otp")
 
@@ -43,20 +44,12 @@ async def request_otp(
     payload: RequestOtpRequest,
     redis: redis.Redis = Depends(get_redis_client),
     email_service: EmailService = Depends(get_email_service),
+    rate_limiter: OtpRateLimiter = Depends(get_otp_rate_limiter),
 ):
     email = payload.email
 
     # Rate Limiting
-    rate_limit_key = f"rate_limit:{email}"
-    current_requests = await redis.incr(rate_limit_key)
-    if current_requests == 1:
-        await redis.expire(rate_limit_key, 60)  # Reset every minute
-
-    if current_requests > settings.otp_rate_limit_per_minute:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many OTP requests. Please try again later.",
-        )
+    await rate_limiter.check(email)
 
     # Check if local auth is disabled (Magic OTP)
     if settings.disable_local_auth:
